@@ -2,266 +2,217 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Demo Asistente Corachan</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Laboratorio AI - Megafy</title>
 
-  <!-- Estilos base del sitio (opcional, sólo para que se vea más "salud") -->
   <style>
-    body {
+    * {
+      box-sizing: border-box;
+      font-family: "Inter", system-ui, sans-serif;
       margin: 0;
-      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-      background: linear-gradient(160deg, #f7fbff 0%, #ffffff 35%, #e9f2f9 100%);
-      color: #002b49;
+      padding: 0;
+    }
+
+    body {
+      background: radial-gradient(circle at 20% 20%, #0f172a, #1e293b);
+      color: white;
       min-height: 100vh;
-    }
-    header {
-      background: white;
-      border-bottom: 1px solid rgba(0, 43, 73, 0.08);
-      padding: 12px 24px;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 12px;
+      justify-content: center;
+      text-align: center;
+      overflow-x: hidden;
+      position: relative;
     }
+
     header img {
-      height: 36px;
+      width: 180px;
+      height: auto;
+      margin-bottom: 30px;
+      filter: drop-shadow(0 0 8px rgba(255,255,255,0.2));
     }
-    main {
-      padding: 40px 24px 120px;
-      max-width: 1100px;
-      margin: 0 auto;
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      letter-spacing: 0.5px;
     }
-    .hero {
-      background: white;
-      border-radius: 18px;
-      padding: 26px 26px 30px;
-      box-shadow: 0 12px 30px rgba(0, 43, 73, 0.04);
-    }
-    .hero h1 {
-      margin-top: 0;
-      font-size: 2.1rem;
-    }
-    .hero p {
-      max-width: 620px;
+
+    p {
+      font-size: 1.1rem;
+      opacity: 0.85;
+      max-width: 500px;
       line-height: 1.5;
     }
+
+    footer {
+      position: absolute;
+      bottom: 10px;
+      font-size: 0.85rem;
+      opacity: 0.6;
+      letter-spacing: 0.3px;
+    }
+
+    /* Botón flotante principal */
+    .chat-button {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background-color: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      font-size: 28px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      transition: all 0.3s ease;
+      z-index: 9999;
+    }
+
+    .chat-button:hover {
+      background-color: #2563eb;
+      transform: scale(1.07);
+    }
+
+    /* Contenedor del chatbot */
+    .chat-container {
+      position: fixed;
+      bottom: 90px;
+      right: 24px;
+      width: 480px;
+      height: 650px;
+      border-radius: 16px;
+      box-shadow: 0 4px 25px rgba(0,0,0,0.5);
+      background: #111827;
+      overflow: hidden;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(10px);
+      transition: all 0.35s ease;
+      z-index: 9998;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-container.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .chat-header {
+      background: #1e293b;
+      color: white;
+      font-size: 0.9rem;
+      padding: 8px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chat-header button {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      opacity: 0.8;
+      transition: 0.2s;
+    }
+
+    .chat-header button:hover {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+
+    .chat-iframe {
+      flex: 1;
+      border: none;
+      width: 100%;
+      height: 100%;
+    }
+
+    .maximized {
+      width: 90vw !important;
+      height: 85vh !important;
+      bottom: 7.5vh !important;
+      right: 5vw !important;
+      border-radius: 20px !important;
+      transition: all 0.4s ease !important;
+    }
+
+    @media (max-width: 600px) {
+      .chat-container {
+        width: 90%;
+        height: 80%;
+        right: 5%;
+      }
+      .maximized {
+        width: 100vw !important;
+        height: 100vh !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        border-radius: 0 !important;
+      }
+    }
   </style>
-
-  <!-- Chatbot Corachan Integration -->
-  <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      // === Estilos específicos del widget ===
-      const style = document.createElement("style");
-      style.textContent = `
-        /* Botón flotante */
-        #chatbot-toggle {
-          position: fixed;
-          bottom: 20px;
-          right: 20px;
-          background-color: #002b49; /* azul oscuro tipo Corachan */
-          color: white;
-          border: none;
-          border-radius: 999px;
-          padding: 14px 22px;
-          font-size: 15px;
-          cursor: pointer;
-          z-index: 1000;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-          transition: all 0.3s ease;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-        #chatbot-toggle:hover {
-          background-color: #004a7c;
-          transform: translateY(-2px);
-        }
-        /* Icono redondo dentro del botón (puedes poner el logo aquí si quieres) */
-        #chatbot-toggle .icon {
-          width: 26px;
-          height: 26px;
-          border-radius: 50%;
-          background: rgba(255,255,255,0.1);
-          display: grid;
-          place-items: center;
-          font-size: 15px;
-        }
-
-        /* Contenedor del iframe */
-        #chatbot-container {
-          position: fixed;
-          bottom: 90px;
-          right: 20px;
-          width: 420px;
-          height: 600px;
-          display: none;
-          flex-direction: column;
-          border-radius: 16px;
-          overflow: hidden;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-          z-index: 999;
-          background: #f9fcff;
-        }
-
-        /* Encabezado del chatbot */
-        #chatbot-header {
-          background: linear-gradient(135deg, #e6f3ff, #cde7fa);
-          color: #002b49;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          font-weight: 600;
-          padding: 10px 16px;
-          border-bottom: 1px solid #b7d8ef;
-        }
-
-        #chatbot-header img {
-          height: 28px;
-        }
-
-        #chatbot-header small {
-          display: block;
-          font-weight: 400;
-          font-size: 11px;
-          color: rgba(0, 43, 73, 0.5);
-          margin-top: -2px;
-        }
-
-        iframe#chatbot-iframe {
-          flex-grow: 1;
-          border: none;
-          background-color: #f9fcff; /* fondo claro y saludable */
-        }
-
-        /* Animación de apertura */
-        @keyframes slideUp {
-          from { transform: translateY(20px); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
-        }
-
-        /* Botón de cerrar en el header */
-        #chatbot-close {
-          margin-left: auto;
-          background: rgba(0, 43, 73, 0.04);
-          border: none;
-          width: 26px;
-          height: 26px;
-          border-radius: 50%;
-          cursor: pointer;
-          display: grid;
-          place-items: center;
-          color: #002b49;
-          font-size: 16px;
-        }
-        #chatbot-close:hover {
-          background: rgba(0, 43, 73, 0.11);
-        }
-
-        /* Responsive */
-        @media (max-width: 520px) {
-          #chatbot-container {
-            right: 10px;
-            width: 92vw;
-            height: 72vh;
-          }
-        }
-      `;
-      document.head.appendChild(style);
-
-      // === Crear botón flotante ===
-      const chatButton = document.createElement("button");
-      chatButton.id = "chatbot-toggle";
-      const icon = document.createElement("span");
-      icon.className = "icon";
-      icon.textContent = "💬";
-      const label = document.createElement("span");
-      label.textContent = "Asistente Corachan";
-      chatButton.appendChild(icon);
-      chatButton.appendChild(label);
-
-      // === Crear contenedor del chat ===
-      const container = document.createElement("div");
-      container.id = "chatbot-container";
-
-      // Header
-      const header = document.createElement("div");
-      header.id = "chatbot-header";
-
-      const logo = document.createElement("img");
-      logo.src = "https://static.colectivosvip.com/public/colectivos/427/logo.png";
-      logo.alt = "Hospital Corachan";
-
-      const titleWrap = document.createElement("div");
-      const title = document.createElement("div");
-      title.textContent = "Asistente Virtual Corachan";
-      const subtitle = document.createElement("small");
-      subtitle.textContent = "Consultas rápidas de la demo";
-
-      titleWrap.appendChild(title);
-      titleWrap.appendChild(subtitle);
-
-      const closeBtn = document.createElement("button");
-      closeBtn.id = "chatbot-close";
-      closeBtn.setAttribute("aria-label", "Cerrar asistente");
-      closeBtn.textContent = "×";
-
-      header.appendChild(logo);
-      header.appendChild(titleWrap);
-      header.appendChild(closeBtn);
-
-      // Iframe
-      const iframe = document.createElement("iframe");
-      iframe.id = "chatbot-iframe";
-      iframe.src = "https://openai-chatkit-starter-7wtghdvcj-megafys-projects.vercel.app/";
-
-      container.appendChild(header);
-      container.appendChild(iframe);
-
-      // === Lógica abrir/cerrar ===
-      function openChat() {
-        container.style.display = "flex";
-        container.style.animation = "slideUp 0.25s ease";
-      }
-      function closeChat() {
-        container.style.display = "none";
-      }
-
-      chatButton.addEventListener("click", () => {
-        const visible = container.style.display === "flex";
-        if (visible) {
-          closeChat();
-        } else {
-          openChat();
-        }
-      });
-
-      closeBtn.addEventListener("click", closeChat);
-
-      // Insertar en el DOM
-      document.body.appendChild(chatButton);
-      document.body.appendChild(container);
-    });
-  </script>
 </head>
+
 <body>
   <header>
-    <img src="https://static.colectivosvip.com/public/colectivos/427/logo.png" alt="Hospital Corachan" />
-    <div>
-      <strong>Demo Megafy AI</strong><br />
-      <span style="font-size: 12px; opacity: .6;">Demo AI Megafy</span>
-    </div>
+    <img src="https://megafy.net/wp-content/uploads/2022/06/logo-megafy-footer.png" alt="Logo Megafy" />
   </header>
 
   <main>
-    <div class="hero">
-      <h1>Asistente virtual para pacientes y personal</h1>
-      <p>
-        Este es un ejemplo de cómo se puede incrustar un chatbot externo  dentro de una página
-        de la clínica.
-      </p>
-      <p>
-        Pulsa abajo a la derecha en <strong>“Asistente Corachan”</strong> para abrir el chat.
-      </p>
-    </div>
+    <h1>Bienvenido al Laboratorio AI de Megafy</h1>
+    <p>Explorando el futuro con inteligencia artificial y desarrollo avanzado.</p>
   </main>
+
+  <footer>
+    Creado con 🧠 x Megafy
+  </footer>
+
+  <!-- Chat flotante -->
+  <button id="chatBtn" class="chat-button">💬</button>
+
+  <div id="chatContainer" class="chat-container">
+    <div class="chat-header">
+      <span>Chatbot Megafy AI</span>
+      <div>
+        <button id="maximizeBtn" title="Maximizar / Restaurar">⤢</button>
+        <button id="closeBtn" title="Cerrar">✕</button>
+      </div>
+    </div>
+    <iframe
+      id="chatFrame"
+      class="chat-iframe"
+      src="https://openai-chatkit-starter-app-eight-flame.vercel.app/"
+    ></iframe>
+  </div>
+
+  <script>
+    const chatBtn = document.getElementById('chatBtn');
+    const chatContainer = document.getElementById('chatContainer');
+    const closeBtn = document.getElementById('closeBtn');
+    const maximizeBtn = document.getElementById('maximizeBtn');
+
+    chatBtn.addEventListener('click', () => {
+      chatContainer.classList.toggle('active');
+    });
+
+    closeBtn.addEventListener('click', () => {
+      chatContainer.classList.remove('active');
+    });
+
+    maximizeBtn.addEventListener('click', () => {
+      chatContainer.classList.toggle('maximized');
+    });
+  </script>
 </body>
 </html>
+
+
